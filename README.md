@@ -1,1 +1,2 @@
-# day-color-bot
+
+# Day color bot
