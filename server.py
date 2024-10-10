@@ -1,34 +1,38 @@
+#!/usr/bin/env python
+
 import asyncio
-import websockets
-from websockets import ConnectionClosed
+import datetime
+import random
+from tags import Runner 
+from websockets.asyncio.server import broadcast, serve
 
+words = ["summer", "winter", "dark", "sleep"]
 
-CLIENTS = set()
-async def handler(websocket):
-    CLIENTS.add(websocket)
+CONNECTIONS = set()
+
+async def register(websocket):
+    CONNECTIONS.add(websocket)
     try:
         await websocket.wait_closed()
     finally:
-        CLIENTS.remove(websocket)
+        CONNECTIONS.remove(websocket)
 
-async def broadcast(message):
-    print("broadcast", message)
-    for websocket in CLIENTS.copy():
-        try:
-            await websocket.send(message)
-        except ConnectionClosed:
-            pass
-
-async def broadcast_messages():
+async def show_time():
+    run = Runner()
+    
+    count = 0
     while True:
-        await asyncio.sleep(1)
-        message = "hello"  # your application logic goes here
-        await broadcast(message)
+        message = datetime.datetime.utcnow().isoformat() + "Z"
+        broadcast(CONNECTIONS, message)
+        print(message)
+        
+        run.process_msg(words[count % len(words)])
+        count +=1
+        await asyncio.sleep(random.random() * 2.0 + 60)
 
 async def main():
-    async with websockets.serve(handler, "localhost", 8765):
-        #await asyncio.Future()  # run forever
-        await broadcast_messages()
+    async with serve(register, "localhost", 5678):
+        await show_time()
 
 if __name__ == "__main__":
     asyncio.run(main())

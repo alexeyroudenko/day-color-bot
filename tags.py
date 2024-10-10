@@ -37,7 +37,7 @@ def retrieve_trends():
     tags = []
     for tag in all_tags:
         tags.append(tag.text)
-    return tags
+    return tags[0:cfg['app']['count_trends']]
 
 def save_trends(trends):
     import datetime
@@ -56,6 +56,7 @@ created by tag string and store state of downloaded images and page
 class Tag():
     def __init__(self, tag_str:str):
         self.tag_str = tag_str
+        self.folder = cfg['app']['tags_folder'] + self.tag_str + "/"
         self.count = -1
         # self.count_files = 0
         
@@ -117,12 +118,22 @@ class AddToQueueCommand():
         self.urls = self.tagURLS.retrieve(tag_str)
         count_files = 0
         folder = cfg['app']['tags_folder'] + self.tag_str + "/"
+        os.makedirs(folder, exist_ok=True)
         if self.urls:
             for img_url in self.urls:
-                count_files += 1
                 out_file = folder + f"{count_files}.jpg"
-                logging.info(f"queue add {img_url} to {out_file}")                        
-                self.images.queue.put([img_url, out_file])
+                if count_files < 2:
+                    # fast download for making spot
+                    logging.info(f"fast queue add {img_url} to {out_file}")                        
+                    self.images.trends_queue.put([img_url, out_file])
+                else:
+                    # detail download for analyze                    
+                    logging.info(f"regular queue add {img_url} to {out_file}")                        
+                    self.images.queue.put([img_url, out_file])
+                count_files += 1
+                
+            if not self.images.trends_started:
+                self.images.start_trends_thread()
                 
             if not self.images.started:
                 self.images.start_thread()
@@ -158,14 +169,37 @@ class AddToQueueWordCommand():
 '''
 class MakeSpotCommand():
     def __init__(self):
-        ...
-        
+        ...        
     def execute(self, word):
         from spot import make_collages_folder
         from spot import make_spot
-        collage_path = cfg['app']['tags_folder'] + f"{word}_src.jpg"
+        collage_path = cfg['app']['spot_folder'] + f"{word}_src.jpg"
         make_collages_folder(cfg['app']['tags_folder'] + f"/{word}/", collage_path)
         spot_path = make_spot(collage_path, word, cfg['app']['spot_folder'])
+        
+'''
+
+
+'''
+class MakeTrendsSpotCommand():
+    def __init__(self):
+        ...        
+    def execute(self, tags):
+        import glob
+        imgs = []
+        for tag_key in tags.keys():
+            tag = tags[tag_key]
+            im = glob.glob(tag.folder + "*")            
+            imgs.extend(im)
+            
+        import datetime
+        file_base = datetime.datetime.now().strftime('%Y-%m-%d-%H')          
+        word = file_base                  
+        from spot import make_collages
+        from spot import make_spot
+        collage_path = cfg['app']['spot_folder'] + f"{word}_src.jpg"
+        make_collages(imgs, collage_path)
+        spot_path = make_spot(collage_path, word, cfg['app']['spot_folder'])        
                 
 '''
 
@@ -212,12 +246,23 @@ class Runner():
                 command = MakeSpotCommand()
                 command.execute(word)
 
+        if msg == "trends":
+            action = args[1]
+            if action == "downloaded":
+                logger.info(f"collect filenames")
+                
+            if action == "finish":
+                logger.info(f"make spot for trends")
+                command = MakeTrendsSpotCommand()
+                command.execute(self.state.tags)
+
     '''
         Regular logic
     '''
     def loop(self, trends):
         save_trends(trends)
         self.state.update(trends)
+        
 
     '''
         Retrieve word from TG

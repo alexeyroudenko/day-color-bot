@@ -1,10 +1,10 @@
 app:
-  spot_folder   : "./data/tags/"
+  spot_folder   : "./data/spot/"
   tags_folder   : "./data/tags/"  
   txt_path      : "./data/txt/"
   tmp_folder    : "./data/tmp/"
   chat_ids      : "./data/bot/chat_ids.txt"
   
   sleep_time : 3600
-  count_trends : 2
-  limit : 4
+  count_trends : 10
+  limit : 10

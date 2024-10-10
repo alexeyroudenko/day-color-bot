@@ -56,7 +56,7 @@ def downloader(queue, event, type = "img"):
             out_file = item[1]
             logging.info(f'download {url} {out_file}')            
             import time
-            time.sleep(2)
+            time.sleep(0.1)
             try:                
                 #urllib.request.urlretrieve(url2, out_file)
                 request = urllib.request.Request(url, None, headers)
@@ -66,7 +66,7 @@ def downloader(queue, event, type = "img"):
                     raise
                 with open(out_file, 'wb') as f:
                     f.write(image)                    
-                    event.send(type, "downloaded", out_file)                
+                    event.send(type, "downloaded", out_file)
                     
             except urllib.error.HTTPError as e:
                 logging.error(f"error {out_file} {e}")
@@ -84,9 +84,14 @@ def downloader(queue, event, type = "img"):
                     os.remove(out_file)
             
             queue.task_done()
+            
             if type == "word":
                 if queue.qsize() == 0:
                     event.waiting_word = False
+                    event.send(type, "finish")
+                    
+            if type == "trends":
+                if queue.qsize() == 0:
                     event.send(type, "finish")
 
 
@@ -116,7 +121,8 @@ class TagURLS():
                           + '&adlt=' + adult + '&qft=' + filters
 
         try:
-            request = urllib.request.Request(request_url, None, headers=self.headers)
+            encoded_url = urllib.parse.quote(request_url, safe='/:?&=')
+            request = urllib.request.Request(encoded_url, None, headers=self.headers)
             response = urllib.request.urlopen(request)        
             html = response.read().decode('utf8')
             #html = response.read()
@@ -137,13 +143,17 @@ class Images():
     def __init__(self, event):
         self.event = event
         self.buffer_size = 512
+        
         self.queue = LifoQueue()
-        self.word_queue = LifoQueue()
         self.started = False
-        self.word_started = False        
+        
+        self.word_queue = LifoQueue()
+        self.word_started = False
+
+        self.trends_queue = LifoQueue()
+        self.trends_started = False
         
     def start_thread(self):
-        # run download threds
         self.downloader_thread = Thread(
             target=downloader,
             args=(self.queue,self.event),
@@ -153,7 +163,6 @@ class Images():
         self.started = True        
 
     def start_word_thread(self):
-        # run download words
         self.word_downloader_thread = Thread(
             target=downloader,
             args=(self.word_queue, self.event, "word"),
@@ -161,3 +170,12 @@ class Images():
         )
         self.word_downloader_thread.start()
         self.word_started = True
+        
+    def start_trends_thread(self):
+        self.trends_downloader_thread = Thread(
+            target=downloader,
+            args=(self.trends_queue, self.event, "trends"),
+            daemon=True
+        )
+        self.trends_downloader_thread.start()
+        self.trends_started = True        
