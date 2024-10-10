@@ -9,7 +9,6 @@ from websockets.asyncio.server import broadcast, serve
 words = ["summer", "winter", "dark", "sleep"]
 
 CONNECTIONS = set()
-
 async def register(websocket):
     CONNECTIONS.add(websocket)
     try:
@@ -18,14 +17,12 @@ async def register(websocket):
         CONNECTIONS.remove(websocket)
 
 async def show_time():
-    run = Runner()
-    
+    run = Runner()    
     count = 0
     while True:
         message = datetime.datetime.utcnow().isoformat() + "Z"
         broadcast(CONNECTIONS, message)
         print(message)
-        
         run.process_msg(words[count % len(words)])
         count +=1
         await asyncio.sleep(random.random() * 2.0 + 60)

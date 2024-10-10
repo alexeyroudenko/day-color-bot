@@ -50,6 +50,7 @@ Event converted to websocket
 class Event():
     
     waiting_word = False
+    waiting_word_stop = False
     observer = None
     count = 0
     

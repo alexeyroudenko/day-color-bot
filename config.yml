@@ -4,7 +4,7 @@ app:
   txt_path      : "./data/txt/"
   tmp_folder    : "./data/tmp/"
   chat_ids      : "./data/bot/chat_ids.txt"
-  
+  restart_collect : False
   sleep_time : 3600
   count_trends : 10
   limit : 10

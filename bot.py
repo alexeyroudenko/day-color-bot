@@ -9,41 +9,21 @@ import re
 import glob
 import os
 import datetime, pytz
-
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
 
 from tags import retrieve_trends
-from tags import Runner   
-              
+from controller import Runner   
 
 import yaml
 with open('config.yml', 'r') as file:
     cfg = yaml.safe_load(file)
-   
-   
-# logging.basicConfig(
-#     format="%(asctime)s - %(module)s - %(name)s - %(levelname)s - %(message)s",
-#     level=logging.INFO,
-# )
-# logger = logging.getLogger('bot')  
-    
+       
 class TColorBot:
     
     API_KEY: str
     MY_CHAT_ID: str
     chat_ids_file:str = cfg['app']['chat_ids']
     tmp_folder:str = cfg['app']['tmp_folder']
-
-    
-    # logFormat = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    # logging.basicConfig(
-    #     # format=logFormat,
-    #     level=logging.INFO,
-    # )
     
     logger = logging.getLogger('bot')
     httpx_logger = logging.getLogger("httpx")
@@ -61,8 +41,10 @@ class TColorBot:
         except OSError:
             pass
 
+
+
     def startBot(self):
-        self.run = Runner()
+        self.runer = Runner()
         exitt = False
         if self.API_KEY == None:
             logging.info("API_KEY must be defined")
@@ -97,65 +79,36 @@ class TColorBot:
         
     async def a_collect(self, context):
         logging.info(f"a_collect {context}")
-        # await context.bot.send_message(chat_id=self.MY_CHAT_ID, text='start a_collect')
         start = time.time()
         try:            
-            # from collector.collector import TrandsCollector
-            # collector = TrandsCollector()
-            # collector.run()
-            #
-            #
-            #
-            #            
-            trends = retrieve_trends()[0:cfg['app']['count_trends']]            
-            self.run.loop(trends)                            
+            trends = retrieve_trends()           
+            self.runer.loop(trends)                            
             logging.log(f"trends {trends}")
                                     
             end = time.time()        
         except Exception as e :
             end = time.time()
             logging.log(logging.ERROR,str(e))
-            #await context.bot.send_message(chat_id=self.MY_CHAT_ID, text="Failure collect")    
-        #await context.bot.send_message(chat_id=self.MY_CHAT_ID, text='end a_collect')
-
-    
-    
-    
+                
     
     
     async def handle_text_message(self, update, context):
         username = str(update.message.chat.username)
         start = time.time()
         try:            
+
             #msg = "Started processing for " + username + f" and {update.effective_chat.id} with " + update.message.text
             #msg = update.message.text
             #logging.info(msg)
             #await context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
-            query = update.message.text
+            query = update.message.text            
+            self.runer.process_msg(query) 
+            while self.runer.event.waiting_word == True:
+                time.sleep(0.5)
+            while self.runer.event.waiting_word_spot == True:
+                time.sleep(0.5)                
+            spot_path = self.runer.spot_path    
             
-            self.run.process_msg(query)
-            
-            from images import get_collage_path
-            from images import make_collages_folder
-            from images import make_spot
-            
-            #collage_path = get_collage_path(query)
-            collage_path = cfg['app']['tags_folder'] + f"{query}_src.jpg"
-            logger.log(f"collage_path {collage_path}")
-            imgs_paths = cfg['app']['tags_folder'] + f"/{query}/"
-            logger.log(f"imgs_paths {imgs_paths}")
-            make_collages_folder(imgs_paths, collage_path)
-            logger.log(f"collage_path {collage_path}")
-            spot_path = make_spot(collage_path, query, cfg['app']['spot_folder'])
-
-            # # run collector
-            # from collector.collector import WordCollector
-            # collector = WordCollector()
-            # collage_filename = collector.get_collage_filename(update.message.text)
-            # downloaded_paths = collector.download_query(update.message.text, self.tmp_folder, 11)
-            # collage_path = collector.make_collages(downloaded_paths, collage_filename)
-            # spot_path = collector.make_spot(collage_path)
-            # logging.info(f"collected {spot_path}")  
             
             end = time.time()
             await context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(spot_path, 'rb'))
@@ -166,9 +119,7 @@ class TColorBot:
             await context.bot.send_message(chat_id=update.effective_chat.id, text="Failure processing your message")    
     
     
-    
-    
-    
+
     
     
     #
