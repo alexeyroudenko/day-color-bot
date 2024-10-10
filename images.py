@@ -47,6 +47,7 @@ class ItemDownload():
         self.request_url = request_url
         self.debug = debug
         self.done = False
+        self.itype = "img"
     
     def toString(self):
         return f"{self.url} {self.dst} {self.tag_str} {self.debug}"
@@ -79,34 +80,39 @@ def downloader(queue, event, type = "img"):
                 image = urllib.request.urlopen(request, timeout=timeout).read()
                 if not imghdr.what(None, image):
                     print('[Error]Invalid image, not saving {}'.format(url))
-                    event.send(type, "error", out_file)
+                    # event.send(type, "error", out_file)
                     raise
-                with open(out_file, 'wb') as f:
+                with open(out_file, 'wb') as f:                    
                     f.write(image)                    
-                    item.done = True
+                    #item.done = True                                        
+                    #item.done = True
+                    #item.itype = type
                     event.send("data", "downloaded", item)
+                    # event.send("msg", "downloaded", item)
+                    # event.send(type, "downloaded", item)
+                    # event.send("data", "downloaded", item.dst)
                     event.send(type, "downloaded", out_file)
                     
             except urllib.error.HTTPError as e:
                 logging.error(f"error {out_file} {e}")
-                event.send(type, "error", out_file)
+                # event.send(type, "error", out_file)
             except urllib.error.URLError as e:
                 logging.error(f"error {out_file} {e}")
-                event.send(type, "error", out_file)
+                # event.send(type, "error", out_file)
             except http.client.RemoteDisconnected as e:
                 logging.error(f"error {out_file} {e}")
-                event.send(type, "error", out_file)
+                # event.send(type, "error", out_file)
             except UnicodeEncodeError as e:
                 logging.error(f"error {out_file} {e}")
-                event.send(type, "error", out_file)
+                # event.send(type, "error", out_file)
             except Exception as e:
                 logging.error(f"error {out_file} {e}")
-                event.send(type, "error", out_file)
+                # event.send(type, "error", out_file)
                 
             if os.path.exists(out_file):
                 if not imghdr.what(out_file):
                     os.remove(out_file)
-                    event.send(type, "error", out_file)
+                    # event.send(type, "error", out_file)
             
             queue.task_done()
             

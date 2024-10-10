@@ -19,7 +19,7 @@ logger = logging.getLogger('tags')
 from images import Images
 from events import Observer
 from events import OSCsender
-
+from images import ItemDownload
 '''
 Main
 '''
@@ -39,7 +39,6 @@ def main():
         #run.loop(trends)        
         #logging.info(f"start sleep {cfg['app']['sleep_time']}")       
         #time.sleep(cfg['app']['sleep_time'])
-
         
         # import glob
         # files = glob.glob(cfg['app']['tags_folder'] + "*")        
@@ -48,11 +47,14 @@ def main():
         # event.send("tag", "add", tag)
         # time.sleep(60.0)
 
-        
-        # import glob
-        # files = glob.glob("Z:\\Developer\\tags\\data\\tags\\#AEWDynamite\*")        
+        # fast load images to TD
+        import glob
+        files = glob.glob("Z:\\Developer\\day-color-bot-airflow\\data\\out\\*_src*")
+        path = files[event.count % len(files)]        
+        item = ItemDownload("", path, "", "", "")
         # event.send("img", "downloaded" , files[event.count % len(files)])
-        # time.sleep(0.2)
+        event.send("data", "downloaded" , item, path)
+        time.sleep(0.1)
         
               
         # if event.count % 5 == 0:
@@ -62,10 +64,8 @@ def main():
         # else:
         #     event.send("tag", "update" ,"winter")            
         # time.sleep(0.2)
-        
-        
-        
-        # event.send("msg", "process_msg" ,"winter")        
+                        
+        # event.send("msg", "process_msg" ,"winter")
         # time.sleep(1)
         
 if __name__ == '__main__':

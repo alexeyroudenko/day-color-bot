@@ -153,12 +153,15 @@ class Runner():
         # logger.info(f"Runner on_event {args}")
         msg = args[0]
         
-        
+
         if msg == "data":
             action = args[1]
             if action == "downloaded":
                 data: ItemDownload = args[2]
-                #print(f"data: {data.toString()}")
+                # print(f"cotroller {data}")                
+                # print(f"data: {data.toString()}")                
+                # event.send(type, "downloaded", out_file)
+                # print(f"data: {data}")
             
         if msg == "tag":
             action = args[1]
@@ -212,7 +215,8 @@ class Runner():
         Regular logic
     '''
     def loop(self, trends):
-        save_trends(trends)
+        #self.event.send("trends", "process_trends", trends)
+        self.event.send("msg", "process_trends", trends)
         self.state.update(trends)
         self.state.save()
         
@@ -221,6 +225,7 @@ class Runner():
         Retrieve word from TG
     '''
     def process_msg(self, *args):
+        logger.info(f"process_msg {args}")
         word = args[0]
         self.event.send("msg", "process_msg", word)
         

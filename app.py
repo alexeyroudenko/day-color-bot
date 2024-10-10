@@ -6,26 +6,27 @@ def main():
     
     run = Runner()
     logic = 0    
+    import time
+    
+    f = open("tags.txt", 'r')
+    tags = f.readline().split(' ')        
     while True:        
         
-        # if logic % 5 == 4:
-        # run.process_msg("summer")               
-        # trends = retrieve_trends()
-        trends = []
+        # if logic % 2 == 0:     
+        #     word = tags[logic+7 % len(tags)]   
+        #     run.process_msg(word)               
+        # print("sleep")
+        # time.sleep(60*2)
         
-        f = open("tags.txt", 'r')
-        tags = f.readline().split(' ')
+        # trends = []
+        #trends = retrieve_trends()        
         trends = tags[logic:logic+10]
-        
         print(f"trends {trends}")
         run.loop(trends)
         
         print("sleep")
-                                
-        logic += 1
-        import time
-        
-        time.sleep(60*10)
+        time.sleep(60*2)
+        logic += 1        
         
 if __name__ == '__main__':
     main()

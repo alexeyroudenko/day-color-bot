@@ -17,6 +17,14 @@ from controller import Runner
 import yaml
 with open('config.yml', 'r') as file:
     cfg = yaml.safe_load(file)
+
+import asyncio
+import datetime
+import random
+from controller import Runner 
+from websockets.asyncio.server import broadcast, serve
+
+words = ["summer", "winter", "dark", "sleep"]    
        
 class TColorBot:
     
@@ -43,9 +51,13 @@ class TColorBot:
 
 
 
+
+
     def startBot(self):
         self.runer = Runner()
         exitt = False
+        
+        
         if self.API_KEY == None:
             logging.info("API_KEY must be defined")
             exitt = True
@@ -61,12 +73,10 @@ class TColorBot:
             unknown_handler = MessageHandler(filters.COMMAND, self.unknown)
             application.add_handler(unknown_handler)
             application.add_handler(MessageHandler(filters.TEXT, self.handle_text_message))
-            
             job = application.job_queue
             # job.run_repeating(self.a_ping, interval=10.0, first=0.0)
             job.run_repeating(self.a_collect, interval=cfg['app']['sleep_time'], first=1)
             #job.run_daily(self.a_daily_job, datetime.time(hour=10, minute=0), days=(0,1,2,3,4,5,6))
-            
             #job.run_repeating(self.a_daily_job, interval=1.0*60.0, first=0.0)            
             application.run_polling(allowed_updates=Update.ALL_TYPES)
             logging.info("Bot await messages")
@@ -76,6 +86,13 @@ class TColorBot:
     async def a_ping(self, context):
         logging.info(f"a_ping {context}")
         await context.bot.send_message(chat_id=self.MY_CHAT_ID, text='a_ping')
+    
+    
+    
+    
+    
+    
+    
         
     async def a_collect(self, context):
         logging.info(f"a_collect {context}")
@@ -84,6 +101,12 @@ class TColorBot:
             trends = retrieve_trends()           
             self.runer.loop(trends)                            
             logging.log(f"trends {trends}")
+            #
+            #
+            #
+                       
+            
+            
                                     
             end = time.time()        
         except Exception as e :
