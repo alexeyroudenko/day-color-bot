@@ -112,15 +112,19 @@ class OSCsender():
             tag_cmd = args[1]
             tag_str = args[2]
             #tag_id = args[3]
-            logging.info(f"send osc {msg}-{tag_cmd}-{tag_str}")
+            # logging.info(f"send osc {msg}-{tag_cmd}-{tag_str}")
             self.client.send_message("/" + msg, [tag_cmd, tag_str])            
         if msg == "img":
             cmd = args[1]
-            path = args[2]
-            logging.info(f"send osc {msg}-{cmd}-{path}")
-            self.client.send_message("/" + msg, [cmd, path])
+            if len(args)>2:
+                path = args[2]
+                logging.info(f"send osc {msg}-{cmd}-{path}")
+                self.client.send_message("/" + msg, [cmd, path])
+            else:
+                logging.info(f"send osc {msg}-{cmd}")
+                
         if msg == "msg":
             cmd = args[1]
             msgg = args[2]
-            logging.info(f"send osc {msg}-{cmd}-{msg}")            
+            # logging.info(f"send osc {msg}-{cmd}-{msg}")            
             self.client.send_message("/" + msg, [cmd, msg])

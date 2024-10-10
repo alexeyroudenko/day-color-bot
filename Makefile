@@ -1,6 +1,6 @@
 .PHONY: test
 test:
-	python tags.py
+	python test.py
 
 .PHONY: bot
 bot:	

@@ -26,62 +26,87 @@ with open('config.yml', 'r') as file:
     cfg = yaml.safe_load(file)
     
 
+headers = {'User-Agent': 'Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0'}
+timeout = 1
 
-def save_image(self, link, file_path):
-    link2 = link.encode('ascii', 'ignore').decode('ascii')
-    request = urllib.request.Request(link2, None, headers)
-    image = urllib.request.urlopen(request, timeout=timeout).read()
-    if not imghdr.what(None, image):
-        print('[Error]Invalid image, not saving {}'.format(link2))
-        raise
-    with open(file_path, 'wb') as f:
-        f.write(image)
+# def save_image(self, link, file_path):
+#     link2 = link.encode('ascii', 'ignore').decode('ascii')
+#     request = urllib.request.Request(link2, None, headers)
+#     image = urllib.request.urlopen(request, timeout=timeout).read()
+#     if not imghdr.what(None, image):
+#         print('[Error]Invalid image, not saving {}'.format(link2))
+#         raise
+#     with open(file_path, 'wb') as f:
+#         f.write(image)
 
+class ItemDownload():
+    def __init__(self, url, dst, tag_str, request_url, debug):
+        self.url = url
+        self.dst = dst
+        self.tag_str = tag_str
+        self.request_url = request_url
+        self.debug = debug
+        self.done = False
+    
+    def toString(self):
+        return f"{self.url} {self.dst} {self.tag_str} {self.debug}"
 
 import imghdr
 import http
-# '''
-# downloader
-# '''
+'''
+    downloader
+
+
+
+'''
 def downloader(queue, event, type = "img"):
     while True:
-        logging.info(f"thread tick queue size {queue.qsize()}")
+        logging.info(f"thread tick queue size {queue.qsize()} for type {type}")
         try:
-            item = queue.get()
+            item:ItemDownload = queue.get()
         except Empty:
             continue
         else:
             # logging.info(f'work with {item}')
-            url = item[0].encode('ascii', 'ignore').decode('ascii')
-            out_file = item[1]
-            logging.info(f'download {url} {out_file}')            
+            url = item.url.encode('ascii', 'ignore').decode('ascii')
+            out_file = item.dst            
+            # logging.info(f'download {url} {out_file}')            
             import time
-            time.sleep(0.1)
+            time.sleep(1)
             try:                
                 #urllib.request.urlretrieve(url2, out_file)
                 request = urllib.request.Request(url, None, headers)
                 image = urllib.request.urlopen(request, timeout=timeout).read()
                 if not imghdr.what(None, image):
                     print('[Error]Invalid image, not saving {}'.format(url))
+                    event.send(type, "error", out_file)
                     raise
                 with open(out_file, 'wb') as f:
                     f.write(image)                    
+                    item.done = True
+                    event.send("data", "downloaded", item)
                     event.send(type, "downloaded", out_file)
                     
             except urllib.error.HTTPError as e:
                 logging.error(f"error {out_file} {e}")
+                event.send(type, "error", out_file)
             except urllib.error.URLError as e:
                 logging.error(f"error {out_file} {e}")
+                event.send(type, "error", out_file)
             except http.client.RemoteDisconnected as e:
                 logging.error(f"error {out_file} {e}")
+                event.send(type, "error", out_file)
             except UnicodeEncodeError as e:
                 logging.error(f"error {out_file} {e}")
+                event.send(type, "error", out_file)
             except Exception as e:
                 logging.error(f"error {out_file} {e}")
+                event.send(type, "error", out_file)
                 
             if os.path.exists(out_file):
                 if not imghdr.what(out_file):
                     os.remove(out_file)
+                    event.send(type, "error", out_file)
             
             queue.task_done()
             
@@ -89,18 +114,20 @@ def downloader(queue, event, type = "img"):
                 if queue.qsize() == 0:
                     event.waiting_word = False
                     event.send(type, "finish")
-                    
-            if type == "trends":
+            elif type == "trends":
                 if queue.qsize() == 0:
-                    event.send(type, "finish")
+                    event.send(type, "finish")            
+            elif type == "img":
+                if queue.qsize() == 0:
+                    event.send("tags", "finish")
 
 
 
-headers = {'User-Agent': 'Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0'}
-timeout = 1
 
 
 '''
+
+
 UrlRetriever
 retrieve urls list for tag
 '''
@@ -120,6 +147,7 @@ class TagURLS():
                           + '&first=' + str(self.page * self.limit) + '&count=' + str(self.limit) \
                           + '&adlt=' + adult + '&qft=' + filters
 
+        debug = f'TagURLS {str(self.page * self.limit)} - {str(self.limit)} - {request_url}'
         try:
             encoded_url = urllib.parse.quote(request_url, safe='/:?&=')
             request = urllib.request.Request(encoded_url, None, headers=self.headers)
@@ -131,7 +159,7 @@ class TagURLS():
             print(e)
             return None
         
-        return self.links 
+        return self.links, debug, request_url
 
 
 '''
