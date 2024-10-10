@@ -11,6 +11,8 @@ import os
 import datetime, pytz
 import os
 
+import websockets
+
 from tags import retrieve_trends
 from controller import Runner   
 
@@ -21,11 +23,94 @@ with open('config.yml', 'r') as file:
 import asyncio
 import datetime
 import random
-from controller import Runner 
-from websockets.asyncio.server import broadcast, serve
 
-words = ["summer", "winter", "dark", "sleep"]    
+import asyncio
+import datetime
+import random            
+from websockets.asyncio.server import broadcast, serve
+from events import Observer
+
+import logging
+import logging.handlers
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(module)s - %(name)s - %(message)s",
+    level=logging.INFO,
+)
+logger = logging.getLogger('tags') 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
        
+    
+import asyncio
+import datetime
+import random
+from websockets.asyncio.server import broadcast, serve        
+
+words = ["summer", "winter", "dark", "sleep"]
+CONNECTIONS = set() 
+
+async def register(websocket):
+    CONNECTIONS.add(websocket)
+    try:
+        await websocket.wait_closed()
+    finally:
+        CONNECTIONS.remove(websocket)
+
+async def show_time():
+    count = 0
+    while True:
+        message = datetime.datetime.utcnow().isoformat() + "Z"
+        broadcast(CONNECTIONS, message)
+        print(message)            
+        #run.process_msg(words[count % len(words)])
+        runner.process_msg(words[count % len(words)])            
+        count +=1
+        await asyncio.sleep(random.random() * 2.0 + 10)
+
+class AttacheR():
+    def on_event(self, args):
+        #logger.info(f" attacheR --- on_event on_event {args}")
+        self.make_action(args)        
+        
+    def make_action(self, args):
+        broadcast(CONNECTIONS, args[0])
+        
+from controller import Runner 
+runner = Runner()
+attacher = AttacheR()      
+runner.observer.attach(attacher)
+
+async def main():
+    async with serve(register, "localhost", 5678):
+        await show_time()                                
+    #from controller import Runner 
+    #runner = Runner()
+    #runner.observer.attach(attacher) 
+    
+asyncio.run(main())
+
+
+
+
+
+
+
+    
+                        
 class TColorBot:
     
     API_KEY: str
@@ -35,6 +120,19 @@ class TColorBot:
     
     logger = logging.getLogger('bot')
     httpx_logger = logging.getLogger("httpx")
+ 
+
+    
+    
+    
+    
+
+    
+    
+    
+    
+    # def __init__(self):
+    #     self.setup_events() 
     # # Set the logging level to WARNING to ignore INFO and DEBUG logs
     # httpx_logger.setLevel(logging.WARNING)
     
@@ -53,32 +151,109 @@ class TColorBot:
 
 
 
-    def startBot(self):
-        self.runer = Runner()
+
+
+
+
+                            
+    '''
+    
+    
+    '''
+    def startBot(self):        
         exitt = False
+        
+        
+        
+        
+        
+        
+        
+       
+        
+        
+        
+        # import asyncio
+        # import datetime
+        # import random
+        # from websockets.asyncio.server import broadcast, serve        
+        
+        # words = ["summer", "winter", "dark", "sleep"]
+        # CONNECTIONS = set()
+        # async def register(websocket):
+        #     CONNECTIONS.add(websocket)
+        #     try:
+        #         await websocket.wait_closed()
+        #     finally:
+        #         CONNECTIONS.remove(websocket)
+
+        # async def show_time():
+        #     count = 0
+        #     while True:
+        #         message = datetime.datetime.utcnow().isoformat() + "Z"
+        #         broadcast(CONNECTIONS, message)
+        #         print(message)            
+        #         #run.process_msg(words[count % len(words)])
+        #         runner.process_msg(words[count % len(words)])            
+        #         count +=1
+        #         await asyncio.sleep(random.random() * 2.0 + 10)
+
+        # async def main():
+        #     async with serve(register, "localhost", 5678):
+        #         await show_time()                        
+                
+        # from controller import Runner 
+        # runner = Runner()
+        # runner.observer.attach(self)        
+        
+        # asyncio.run(main())
+        
+        
+        
+        
+        
+        
+        
+        
         
         
         if self.API_KEY == None:
             logging.info("API_KEY must be defined")
             exitt = True
+        
         logging.info("MY_CHAT_ID       : %s", self.MY_CHAT_ID)
         if not exitt:
+
             application = ApplicationBuilder().token(self.API_KEY).build()
             self.application = application
             logging.info("Starting bot")
+            
             start_handler = CommandHandler("start", self.start)
             application.add_handler(start_handler)
             application.add_handler(CommandHandler("me", self.me_cmd))
             application.add_handler(CommandHandler("now", self.now_cmd))
+            
             unknown_handler = MessageHandler(filters.COMMAND, self.unknown)
             application.add_handler(unknown_handler)
             application.add_handler(MessageHandler(filters.TEXT, self.handle_text_message))
-            job = application.job_queue
-            # job.run_repeating(self.a_ping, interval=10.0, first=0.0)
+            
+            job = application.job_queue            
             job.run_repeating(self.a_collect, interval=cfg['app']['sleep_time'], first=1)
+            
+            # job.run_repeating(self.a_ping, interval=10.0, first=0.0)
             #job.run_daily(self.a_daily_job, datetime.time(hour=10, minute=0), days=(0,1,2,3,4,5,6))
-            #job.run_repeating(self.a_daily_job, interval=1.0*60.0, first=0.0)            
-            application.run_polling(allowed_updates=Update.ALL_TYPES)
+            #job.run_repeating(self.a_daily_job, interval=1.0*60.0, first=0.0)              
+
+
+
+            
+            
+
+            
+
+            
+            
+            # application.run_polling(allowed_updates=Update.ALL_TYPES)
             logging.info("Bot await messages")
         else:
             logging.info("Failed to run, please resolve exports issue and run again")
@@ -140,10 +315,7 @@ class TColorBot:
             end = time.time()
             logging.log(logging.ERROR,str(e))
             await context.bot.send_message(chat_id=update.effective_chat.id, text="Failure processing your message")    
-    
-    
 
-    
     
     #
     #
@@ -201,13 +373,25 @@ class TColorBot:
 
 
 
+
+
+
 if __name__ == '__main__':
     
     # set code directory    
     import os
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    
     bot = TColorBot()
     bot.API_KEY = os.getenv('SHHH_API_KEY')
     bot.MY_CHAT_ID = os.getenv('SHHH_MY_CHAT_ID')
+    
+    
+    
+    
+
+
+
+
+    
+
     bot.startBot()
