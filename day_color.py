@@ -45,7 +45,7 @@ def download_img(trends, delete_prev = True, count_limit = 9):
         trends_text += "" + trend + "\n"
         text = trend
         query_string = trend
-        # print("download %i" % count)
+        print(f"download {count} for query '{query_string}'")                
         count_downloaded = downloader.download(query_string, limit=1,  output_dir='tmp', adult_filter_off=True, force_replace=False, timeout=5)
         count_d = count_d + count_downloaded
         # print("count_downloaded:")
@@ -87,7 +87,7 @@ def palette(infile, outfile):
     ret,label,center=cv2.kmeans(Z,K,None,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
     for i, c in enumerate(np.uint8(center)):
         print(hextriplet(c))
-    bar = plot_colors2(center);
+    bar = plot_colors2(center)
     img = Image.fromarray(bar, 'RGB')
     img.save(outfile)
 
@@ -141,6 +141,8 @@ def make_collages(filename_collage):
 #
 #
 #------------------------------------------------------------------------------
+from pathlib import PureWindowsPath, PurePosixPath
+
 def main():
 
 
@@ -152,15 +154,23 @@ def main():
             os.chdir(dname)
 
             file_base = datetime.datetime.now().strftime('%Y-%m-%d-%H')
-            folder = "out/"
+            folder = dname + "/out/"
             # file_base = "0"
 
-            filename_textout  = folder + file_base + ".txt"
-            filename_collage  = folder + file_base + "_src.jpg"
-            filename_palette  = folder + file_base + "_pal.png"
-            filename_col      = folder + file_base + "_col.png"
-            filename_som      = folder + file_base + "_som.png"
-            filename_blr      = folder + file_base + "_blr.png"
+            #filename_textout  = str(PurePosixPath(PureWindowsPath(folder + file_base + ".txt")))
+            
+            filename_textout  = "/app/out/" + file_base + ".txt"
+            filename_collage  = "/app/out/" + file_base + "_src.jpg"
+            filename_palette  = "/app/out/" + file_base + "_pal.png"
+            filename_col      = "/app/out/" + file_base + "_col.png"
+            filename_som      = "/app/out/" + file_base + "_som.png"
+            filename_blr      = "/app/out/" + file_base + "_blr.png"
+
+            # filename_collage  = str(PurePosixPath(PureWindowsPath(folder + file_base + "_src.jpg")))
+            # filename_palette  = str(PurePosixPath(PureWindowsPath(folder + file_base + "_pal.png")))
+            # filename_col      = str(PurePosixPath(PureWindowsPath(folder + file_base + "_col.png")))
+            # filename_som      = str(PurePosixPath(PureWindowsPath(folder + file_base + "_som.png")))
+            # filename_blr      = str(PurePosixPath(PureWindowsPath(folder + file_base + "_blr.png")))
 
 
             place = "world"
@@ -181,7 +191,8 @@ def main():
             # -------------------------------------------------------------------------
             print("make collage")
             make_collages(filename_collage)
-
+            
+            print(f"get_colours {filename_collage} > {filename_palette}")
             rgb_colours, hex_colors, colors = get_colours(filename_collage, 8, True, filename_palette)
             rgb_colours = rgb_colours[0:7]
 
@@ -198,11 +209,9 @@ def main():
             print("calc_som")
             get_som(raw_data_test, 1000, filename_som, 16)
 
-
             srciImage = Image.open(filename_som)
             gaussImage = srciImage.filter(ImageFilter.GaussianBlur(32))
             gaussImage.save(filename_blr)
-
 
             f = open(filename_textout, "a")
             for c in hex_colors:
@@ -215,13 +224,12 @@ def main():
             
             time.sleep(60*15)
         
-        except Exception as inst:
-
-            time.sleep(60*15)
-            
+        except Exception as inst:                        
             print(type(inst))    # the exception type
             print(inst.args)     # arguments stored in .args
             print(inst) 
+            print("sleep 60*15")
+            time.sleep(60*15)
 
 
 if __name__ == "__main__":

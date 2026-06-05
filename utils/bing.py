@@ -73,24 +73,26 @@ class Bing:
     def run(self):
         while (self.download_count < self.limit) & (self.page_counter < 100):
             logging.info('[%] Indexing page: {}'.format(self.page_counter + 1))
+                        
+            from yandex import get_yandex_img_urls        
+            urls = get_yandex_img_urls(urllib.parse.quote_plus(self.query))
+            
+            print(f"query:{self.query} - url:{urls}")
+
             # Parse the page source and download pics
-            request_url = 'https://www.bing.com/images/async?q=' + urllib.parse.quote_plus(self.query) \
-                          + '&first=' + str(self.page_counter*self.limit) + '&count=' + str(self.limit) \
-                          + '&adlt=' + self.adult + '&qft=' + self.filters
-
-            logging.warn('[%] request_url: {}'.format(request_url))
-
-            request = urllib.request.Request(request_url, None, headers=self.headers)
-            response = urllib.request.urlopen(request)
-            html = response.read().decode('utf8')
-            links = re.findall('murl&quot;:&quot;(.*?)&quot;', html)
-            
-            # logging.info(f"{html}")
-            
-            logging.info("[%] Indexed {} Images on Page {}.".format(len(links), self.page_counter + 1))
+            # request_url = 'https://www.bing.com/images/async?q=' + urllib.parse.quote_plus(self.query) \
+            #               + '&first=' + str(self.page_counter*self.limit) + '&count=' + str(self.limit) \
+            #               + '&adlt=' + self.adult + '&qft=' + self.filters
+            # logging.warn('[%] request_url: {}'.format(request_url))
+            # request = urllib.request.Request(request_url, None, headers=self.headers)
+            # response = urllib.request.urlopen(request)
+            # html = response.read().decode('utf8')
+            # links = re.findall('murl&quot;:&quot;(.*?)&quot;', html)
+            # # logging.info(f"{html}")
+            # logging.info("[%] Indexed {} Images on Page {}.".format(len(links), self.page_counter + 1))
             #print("===============================================")
 
-            for link in links:
+            for link in urls:
                 if self.download_count < self.limit:
                     import cyrtranslit
                     fname= "img_{}_{}.{}".format(cyrtranslit.to_latin(self.query, "ru"), self.page_counter, self.download_count)

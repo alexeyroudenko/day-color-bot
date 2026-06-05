@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   colorbot:
@@ -12,16 +11,14 @@ services:
       - .env
     volumes:
       - type: bind
-        source: ./app/out
+        source: ./
+        target: /app
+      - type: bind
+        source: ./out
         target: /app/out
       - type: bind
-        source: ./app/data
+        source: ./data
         target: /app/data
 
     ports:
-     - "127.0.0.1:8080:80"
-volumes:
-  shared:
-    external: true
-  data:
-    external: true
+     - "127.0.0.1:5050:50"

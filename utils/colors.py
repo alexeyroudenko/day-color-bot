@@ -20,6 +20,7 @@ def RGB2HEX(color):
     return "#{:02x}{:02x}{:02x}".format(int(color[0]), int(color[1]), int(color[2]))
 
 def get_colours(img_path, no_of_colours, show_chart, out_path):
+    print(f"open {img_path}")
     img = get_img(img_path)
     #Reduce image size to reduce the execution time
     mod_img = cv2.resize(img, (512, 512), interpolation = cv2.INTER_AREA)
@@ -47,14 +48,14 @@ def get_colours(img_path, no_of_colours, show_chart, out_path):
 
         new_width = 512
         new_height = 512
-        im = Image.open(out_path)
+        im = Image.open(img_path)
         width, height = im.size
         left = (width - new_width)/2
         top = (height - new_height)/2
         right = (width + new_width)/2
         bottom = (height + new_height)/2
         im = im.crop((left, top, right, bottom))
-
+        print(f"save to {out_path}")
         im.save(out_path)
 
         # print(rgb_colours)

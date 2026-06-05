@@ -29,4 +29,5 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # CMD ["/usr/bin/supervisord","-c","/etc/supervisor/conf.d/supervisord.conf"]
 
 # app command
-CMD ["python", "-u", "./main.py"]
+# CMD ["python", "-u", "./main.py"]
+CMD ["python", "-u", "./day_color.py"]
