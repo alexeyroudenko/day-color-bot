@@ -1,4 +1,0 @@
-requests
-certifi
-pyyaml
-redis

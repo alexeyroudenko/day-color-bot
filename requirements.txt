@@ -1,0 +1,7 @@
+matplotlib
+pillow
+git+https://github.com/alexeyroudenko/bing_image_downloader.git
+scikit-learn
+matplotlib 
+scikit-image
+opencv-python-headless

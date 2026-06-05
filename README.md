@@ -1,12 +1,9 @@
-# Day color bot
+## 🤔 What is it?
 
-docker compose up -d --build
-docker ps -a
-docker container stop 
-docker container rm 
+This is a Docker Compose template for getting started with a new Mage project.
 
-https://bots.arthew0.online:9443/#!/home
+## 🙋‍♂️ Why did you create it?
 
-http://localhost:5000/spots_page/
-http://localhost:5000/ctrl/
+We created this template for users to have an easy way to deploy a project using Docker.
 
+Using Docker Compose allows editors to easily add their own images or modify the Mage image to their liking. 

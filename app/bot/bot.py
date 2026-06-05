@@ -8,11 +8,21 @@ import time
 import re
 import glob
 import os
-# import datetime, pytz
+import datetime, pytz
+import os
 
 import yaml
 with open('config.yml', 'r') as file:
     cfg = yaml.safe_load(file)
+
+import asyncio
+import datetime
+import random
+
+import asyncio
+import datetime
+import random            
+# from websockets.asyncio.server import broadcast, serve
 
 import logging
 import logging.handlers
@@ -21,75 +31,6 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logger = logging.getLogger('bot') 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
-       
-    
-# import asyncio
-# import datetime
-# import random
-# from websockets.asyncio.server import broadcast, serve        
-
-# words = ["summer", "winter", "dark", "sleep"]
-# CONNECTIONS = set() 
-
-# async def register(websocket):
-#     CONNECTIONS.add(websocket)
-#     try:
-#         await websocket.wait_closed()
-#     finally:
-#         CONNECTIONS.remove(websocket)
-
-# async def show_time():
-#     count = 0
-#     while True:
-#         message = datetime.datetime.utcnow().isoformat() + "Z"
-#         broadcast(CONNECTIONS, message)
-#         print(message)            
-#         #run.process_msg(words[count % len(words)])
-#         runner.process_msg(words[count % len(words)])            
-#         count +=1
-#         await asyncio.sleep(random.random() * 2.0 + 10)
-
-# class AttacheR():
-#     def on_event(self, args):
-#         #logger.info(f" attacheR --- on_event on_event {args}")
-#         self.make_action(args)        
-        
-#     def make_action(self, args):
-#         broadcast(CONNECTIONS, args[0])
-        
-# from controller import Runner 
-# runner = Runner()
-# attacher = AttacheR()      
-# runner.observer.attach(attacher)
-
-# async def main():
-#     async with serve(register, "localhost", 5678):
-#         await show_time()                                
-#     #from controller import Runner 
-#     #runner = Runner()
-#     #runner.observer.attach(attacher) 
-    
-# asyncio.run(main())
-
-
-
-
 
 
 
@@ -105,15 +46,6 @@ class TColorBot:
     logger = logging.getLogger('bot')
     httpx_logger = logging.getLogger("httpx")
 
-
-   
-    
-    
-
-    
-    
-    
-    
     # def __init__(self):
     #     self.setup_events() 
     # # Set the logging level to WARNING to ignore INFO and DEBUG logs
@@ -130,74 +62,12 @@ class TColorBot:
         except OSError:
             pass
 
-
-
-
-
-
-
-
-
-                            
     '''
     
     
     '''
     def startBot(self):        
         exitt = False
-        
-        
-        
-        
-        
-        
-        
-       
-        
-        
-        
-        # import asyncio
-        # import datetime
-        # import random
-        # from websockets.asyncio.server import broadcast, serve        
-        
-        # words = ["summer", "winter", "dark", "sleep"]
-        # CONNECTIONS = set()
-        # async def register(websocket):
-        #     CONNECTIONS.add(websocket)
-        #     try:
-        #         await websocket.wait_closed()
-        #     finally:
-        #         CONNECTIONS.remove(websocket)
-
-        # async def show_time():
-        #     count = 0
-        #     while True:
-        #         message = datetime.datetime.utcnow().isoformat() + "Z"
-        #         broadcast(CONNECTIONS, message)
-        #         print(message)            
-        #         #run.process_msg(words[count % len(words)])
-        #         runner.process_msg(words[count % len(words)])            
-        #         count +=1
-        #         await asyncio.sleep(random.random() * 2.0 + 10)
-
-        # async def main():
-        #     async with serve(register, "localhost", 5678):
-        #         await show_time()                        
-                
-        # from controller import Runner 
-        # runner = Runner()
-        # runner.observer.attach(self)        
-        
-        # asyncio.run(main())
-        
-        
-        
-        
-        
-        
-        
-        
         
         
         if self.API_KEY == None:
@@ -221,21 +91,13 @@ class TColorBot:
             application.add_handler(MessageHandler(filters.TEXT, self.handle_text_message))
             
             job = application.job_queue            
-            job.run_repeating(self.a_collect, interval=cfg['app']['sleep_time'], first=1)
-            
+            # job.run_repeating(self.a_collect, interval=cfg['app']['sleep_time'], first=1)
             #job.run_repeating(self.a_ping, interval=10.0, first=0.0)
             #job.run_daily(self.a_daily_job, datetime.time(hour=10, minute=0), days=(0,1,2,3,4,5,6))
             #job.run_repeating(self.a_daily_job, interval=1.0*60.0, first=0.0)              
 
 
 
-            
-            
-
-            
-
-            
-            
             application.run_polling(allowed_updates=Update.ALL_TYPES)
             logging.info("Bot await messages")
         else:
@@ -246,12 +108,7 @@ class TColorBot:
         await context.bot.send_message(chat_id=self.MY_CHAT_ID, text='a_ping')
     
     
-    
-    
-    
-    
-    
-        
+
     async def a_collect(self, context):
         logging.info(f"a_collect {context}")
         start = time.time()
@@ -276,23 +133,46 @@ class TColorBot:
 
             #msg = "Started processing for " + username + f" and {update.effective_chat.id} with " + update.message.text
             #msg = update.message.text
-            #logging.info(msg)
             #await context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
-            query = update.message.text            
+            word = update.message.text            
             #spot_path = self.runer.process_msg(query)             
             
+            
+            
+            # username = "airflow"
+            # password = "airflow"
             import requests
-            #url = f"http://10.0.0.10:5000/app_ctrl/add_word/{query}/"
-            # url = f"http://10.0.0.10:5000/app_ctrl/add_tag/{query}/"
-            url = f"http://10.0.0.10:5000/tag_ctrl/tag_add/{query}/"
-            requests.get(url)
-            spot_path = ""
+            # import base64
+            # userpass = username + ':' + password
+            # encoded_userpass = base64.b64encode(userpass.encode()).decode()
+            AIRFLOW_URL = "http://localhost:6789/api/pipeline_schedules/3/api_trigger"
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer 496c1b90ca86425981683d4d848b0654'
+            }
+            data = {
+                "pipeline_run": {"variables":{"word":word}}  # Вы можете передать конфигурацию, если это необходимо
+            }
+            response = requests.post(AIRFLOW_URL, headers=headers, json=data)
+            print(response.json())
 
             
             
             
+
+
+
+            # import requests
+            # url = f"http://flask:5000/word/add/{query}/"
+            # requests.get(url)
+            # spot_path = f"/app/data/words/{query}.jpg"
+            # import time
+            # while not os.path.exists(spot_path):
+            #     logging.log(logging.INFO, f"waiting {spot_path}")
+            #     time.sleep(1)
+            
             end = time.time()
-            # await context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(spot_path, 'rb'))
+            await context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(spot_path, 'rb'))
         
         except Exception as e :
             end = time.time()

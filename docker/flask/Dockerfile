@@ -18,7 +18,7 @@ RUN pip install eventlet
 # RUN pip install gevent-websocket 
 RUN pip install flask-socketio
 RUN pip install Pillow
-
+RUN pip install requests
 # Make port 5000 available to the world outside this container
 EXPOSE 5000
 
