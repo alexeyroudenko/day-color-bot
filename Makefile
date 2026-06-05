@@ -1,11 +1,11 @@
 .PHONY: test
 test:
-	python test.py
-
-.PHONY: bot
-bot:	
-	python bot.py
+	python retrieve-twitter/retrieve-twitter.py
 
 .PHONY: run
 run:	
-	python app.py
+	python twimg/twimg.py
+
+.PHONY: build
+build:
+	docker compose up -d --build	

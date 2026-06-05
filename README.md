@@ -1,2 +1,2 @@
 
-# Day color bot
+# Color bot

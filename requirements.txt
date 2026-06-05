@@ -16,7 +16,7 @@ h11
 httpcore
 httpx
 idna
-python-telegram-bot[job-queue]
+python-telegram-bot
 sniffio
 typing_extensions
 pyyaml
