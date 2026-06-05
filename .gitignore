@@ -21,6 +21,8 @@ tests/
 trends/
 tmp/
 data/
+downloads/
+dataset/
 logs.txt
 bot.txt
 chat_ids.txt
