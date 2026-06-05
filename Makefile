@@ -1,35 +1,36 @@
+.PHONY: test
+test:
+	python retrieve-twitter/retrieve-twitter.py
+
+.PHONY: stop
+stop:	
+	docker kill $(docker ps -q)
+
+.PHONY: reset
+reset:	
+	docker compose down --volumes --rmi all
+
 .PHONY: build
-build:
+build:	
 	docker compose up -d --build
 
-.PHONY: worker
-worker:
-	docker compose up -d worker --build	
+.PHONY: web
+web:	
+	docker compose up airflow-webserver --build 
 
-.PHONY: bot
-bot:	
-	docker compose up -d bot --build
+.PHONY: triggerer
+triggerer:	
+	docker compose up airflow-triggerer --build
+
+.PHONY: worker
+triggerer:	
+	docker compose up airflow-worker --build
 
 .PHONY: nginx
 nginx:	
-	docker compose up -d nginx --build	
+	docker compose up nginx -d --build 
 
-.PHONY: flask
-flask:	
-	docker compose up -d flask --build
-
-.PHONY: frontend
-frontend:	
-	docker compose up -d frontend --build
-
-.PHONY: tags-service
-tags-service:	
-	docker compose up -d tags_service --build
-
-.PHONY: ip-service
-ip-service:	
-	docker compose up -d ip-service --build	
-
-.PHONY: semantic-service
-semantic-service:	
-	docker compose up -d semantic_service --build	
+.PHONY: init
+init:	
+	docker compose up airflow-init
+	

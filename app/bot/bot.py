@@ -91,7 +91,8 @@ class TColorBot:
             application.add_handler(MessageHandler(filters.TEXT, self.handle_text_message))
             
             job = application.job_queue            
-            # job.run_repeating(self.a_collect, interval=cfg['app']['sleep_time'], first=1)
+            job.run_repeating(self.a_collect, interval=cfg['app']['sleep_time'], first=1)
+            
             #job.run_repeating(self.a_ping, interval=10.0, first=0.0)
             #job.run_daily(self.a_daily_job, datetime.time(hour=10, minute=0), days=(0,1,2,3,4,5,6))
             #job.run_repeating(self.a_daily_job, interval=1.0*60.0, first=0.0)              
@@ -134,42 +135,17 @@ class TColorBot:
             #msg = "Started processing for " + username + f" and {update.effective_chat.id} with " + update.message.text
             #msg = update.message.text
             #await context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
-            word = update.message.text            
+            query = update.message.text            
             #spot_path = self.runer.process_msg(query)             
             
-            
-            
-            # username = "airflow"
-            # password = "airflow"
             import requests
-            # import base64
-            # userpass = username + ':' + password
-            # encoded_userpass = base64.b64encode(userpass.encode()).decode()
-            AIRFLOW_URL = "http://localhost:6789/api/pipeline_schedules/3/api_trigger"
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer 496c1b90ca86425981683d4d848b0654'
-            }
-            data = {
-                "pipeline_run": {"variables":{"word":word}}  # Вы можете передать конфигурацию, если это необходимо
-            }
-            response = requests.post(AIRFLOW_URL, headers=headers, json=data)
-            print(response.json())
-
-            
-            
-            
-
-
-
-            # import requests
-            # url = f"http://flask:5000/word/add/{query}/"
-            # requests.get(url)
-            # spot_path = f"/app/data/words/{query}.jpg"
-            # import time
-            # while not os.path.exists(spot_path):
-            #     logging.log(logging.INFO, f"waiting {spot_path}")
-            #     time.sleep(1)
+            url = f"http://flask:5000/word/add/{query}/"
+            requests.get(url)
+            spot_path = f"/app/data/words/{query}.jpg"
+            import time
+            while not os.path.exists(spot_path):
+                logging.log(logging.INFO, f"waiting {spot_path}")
+                time.sleep(1)
             
             end = time.time()
             await context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(spot_path, 'rb'))
