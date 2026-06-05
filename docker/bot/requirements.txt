@@ -1,0 +1,7 @@
+requests
+click
+anyio
+python-telegram-bot[job-queue]
+pyyaml
+redis
+gevent

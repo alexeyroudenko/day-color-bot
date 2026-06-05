@@ -1,7 +1,0 @@
-osc_adress: "192.168.12.55"
-sleep_time: 1
-max_errors: 100000
-color_log: True
-resolve_coords: False
-phrase: "Hello"
-count: 3

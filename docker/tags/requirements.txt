@@ -1,0 +1,11 @@
+requests
+bs4
+click
+anyio
+certifi
+python-telegram-bot[job-queue]
+pathvalidate
+python-osc
+pyyaml
+redis
+gevent

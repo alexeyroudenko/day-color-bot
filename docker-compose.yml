@@ -1,24 +1,150 @@
+networks:
+  mynetwork:
+    ipam:
+      config:
+       - subnet: 10.0.0.0/16
 
 services:
-  colorbot:
-    container_name: daycolorbot
-    hostname: daycolorbot
+
+  tags:
+    container_name: tags
     restart: always
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/tags/Dockerfile
+    networks:
+      mynetwork:
+        ipv4_address: 10.0.0.12      
     env_file:
       - .env
     volumes:
       - type: bind
-        source: ./
+        source: ./app/tags
         target: /app
       - type: bind
-        source: ./out
-        target: /app/out
+        source: ./config.yml
+        target: /app/config.yml
       - type: bind
         source: ./data
         target: /app/data
+    depends_on:
+      - redis
 
+  img:
+    container_name: img
+    restart: always
+    build:
+      context: .
+      dockerfile: docker/img/Dockerfile
+    env_file:
+      - .env
+    networks:
+      mynetwork:
+        ipv4_address: 10.0.0.13      
+    volumes:
+      - type: bind
+        source: ./app/img
+        target: /app
+      - type: bind
+        source: ./config.yml
+        target: /app/config.yml
+      - type: bind
+        source: ./data
+        target: /app/data        
+    depends_on:
+      - redis
+      - tags
+
+  redis: 
+    image: redislabs/redismod
+    container_name: redis_dc3
+    networks:
+      mynetwork:
+        ipv4_address: 10.0.0.11    
     ports:
-     - "127.0.0.1:5050:50"
+      - '6379:6379'
+    volumes:
+    - /data/redis:/data
+    restart: always       
+
+  flask:
+    build: 
+      dockerfile: docker/flask/Dockerfile
+    container_name: flask_dc3
+    networks:
+      mynetwork:
+        ipv4_address: 10.0.0.10
+    ports:
+      - "5000:5000"
+    volumes:
+      - type: bind
+        source: ./app/flask
+        target: /app
+      - type: bind
+        source: ./data
+        target: /app/data 
+      #- .:/code
+    depends_on:
+      - redis
+
+  spot:
+    container_name: spot
+    restart: always
+    build:
+      context: .
+      dockerfile: docker/spot/Dockerfile
+    networks:
+      mynetwork:
+        ipv4_address: 10.0.0.14      
+    env_file:
+      - .env
+    volumes:
+      - type: bind
+        source: ./app/spot
+        target: /app
+      - type: bind
+        source: ./config.yml
+        target: /app/config.yml
+      - type: bind
+        source: ./data
+        target: /app/data        
+    depends_on:
+      - redis
+      - tags 
+      - img
+
+
+  bot:
+    container_name: bot
+    restart: always
+    build:
+      context: .
+      dockerfile: docker/bot/Dockerfile
+    networks:
+      mynetwork:
+        ipv4_address: 10.0.0.17      
+    env_file:
+      - .env
+    volumes:
+      - type: bind
+        source: ./app/bot
+        target: /app
+      - type: bind
+        source: ./config.yml
+        target: /app/config.yml
+      - type: bind
+        source: ./data
+        target: /app/data        
+    depends_on:
+      - redis
+      - tags 
+      - img
+
+
+
+volumes:
+  shared:
+    external: true
+  data:
+    external: true
+  app:

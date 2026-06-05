@@ -1,0 +1,610 @@
+<!doctype html>
+<html>
+<head>
+  <script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+  <title>DayColor</title>
+  
+</head>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
+<style>
+  #log_img {
+    position: absolute;
+    top:0xp;
+    right:512px;
+    z-index:100;
+  }
+  .update_item {
+    border:1px solid #ffffff;
+    float:left;
+  }
+
+  #spot_colors, #spot_process {
+    border:1px solid #ffffff;
+    position: absolute;
+    top:128px;
+    right:128px;
+    width:64px;
+    height:64px;
+    font-size:10px;
+    visibility:hidden;
+  }
+
+  #spot_process {
+    right:256px;
+    visibility:hidden;
+  }
+
+  .spots ul {
+    border:1px solid #fff;
+    list-style:none;
+    padding:0px;
+    margin:0px;
+  }
+  .spots li {
+    list-style:none;
+    padding:40px;
+    margin:40px;
+    /*visibility:hidden;*/
+  }
+
+
+</style>
+<body>
+  
+  <script type="text/javascript" charset="utf-8">
+
+    var server = window.location.protocol + "//" + window.location.host;
+    console.log(server)
+    
+    var socket = io();
+
+    var counter = 0
+    var tag = 0
+    var imgs = 0
+    var start_time = (new Date).getTime()
+    var inited = false
+
+
+    height = 600
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", server + "/spots");
+    //xhr.send();
+    xhr.onreadystatechange = function() {
+      if (this.status === 200 && this.readyState === 4) {          
+          var data = JSON.parse(this.response);          
+          var template = '';
+          var photos = data;
+          height = photos.length * 256
+          for(var i=0; i < photos.length; i++){
+            //console.log(photos[i]['tag'])
+            template += [
+              '<li class="white">',
+                  '<span class="caption"><span class="ctxt">' + photos[i]['tag'] + '</span></span><img class="photo-img" src="'+photos[i]['filename']+'" alt="" width="256px" height="256px">',
+              '</li>'
+            ].join('');
+          }
+          var result_view = document.querySelector('.ajax-result');
+          result_view.innerHTML = template;
+        }
+      }
+
+      let id = null;      
+      let pos = 0;
+      clearInterval(id);
+      id = setInterval(frame, 20);
+      function frame() {
+        if (pos == height) {
+          pos = 0
+          //clearInterval(id);
+        } else {
+          pos++;
+          const elem = document.getElementById("animate");
+          elem.style.top = -pos + 'px';
+          //elem.style.left = pos + 'px';
+        }
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+      //
+      // Add tags
+      // 
+
+      var tags_colums = {}
+      const max_colums = 10
+
+      function add_tag_html(tag_str) {
+        tag_str_fix = tag_str.replace("#","%23")
+        if (Object.keys(tags_colums).length > max_colums) {
+            keys = Object.keys(tags_colums)
+            console.log("keys", keys, keys.length)
+            key = keys[0]            
+            delete_tag_html(tags_colums[key])
+            delete tags_colums[key]
+            delete keys[0]
+            console.log("delete", key, tags_colums[key])            
+        }
+
+        var resul1t_view = document.querySelector('.tags-result');            
+        template = [
+              '<div class="tag_str" id="tag_' + tag_str + '">' + tag_str + '</div><div id="data_'+tag_str+'"></div>',
+          ].join('');
+          element = document.createElement("li")
+          element.innerHTML = template
+          resul1t_view.appendChild(element)
+          tags_colums[tag_str] = element          
+          element.style.cursor = 'pointer';
+          element.onclick = function() {
+              console.log(tag_str_fix, "tag_str: {tag_str} {element.id}")
+          };          
+
+          // load img for tag
+          var xhrtags = new XMLHttpRequest();          
+          xhrtags.open("GET", server+"/tag/" + tag_str_fix);
+          xhrtags.send();
+          xhrtags.onreadystatechange = function() {
+          if (this.status === 200 && this.readyState === 4) {
+              var imgs = JSON.parse(this.response);
+
+              for(var i = 0; i < imgs.length; i++){
+                img = imgs[i]          
+                result = img.substring(img.length - 7);
+                if (result == "blr.png") {
+                  path = img
+                  document.getElementById("tag_" + tag_str).style.backgroundImage = "url('"+path+"')";
+                  document.getElementById("tag_" + tag_str).style.backgroundSize = "128px 128px"
+                  document.getElementById("tag_" + tag_str).style.opacity  = ""                    
+                  setTimeout(() => {document.getElementById("tag_" + tag_str).style.opacity  = "1"}, 400);    
+                } else if (i > 12)  {
+                  new_image(tag_str, img, "32px")
+                } else {
+                  new_image(tag_str, img)
+                }
+              }
+            }
+          }
+      }
+
+      //
+      //
+      //
+      function load_spot_state() {
+        var xhrtags2 = new XMLHttpRequest();
+        xhrtags2.onreadystatechange = function() {             
+          if(this.response.length>0 && xhrtags2.readyState==4){ 
+            var spot_data = JSON.parse(this.response);
+            //alert(spot_data)
+            //alert(spot_data[0][1])
+            console.log("load_spot_state", spot_data, xhrtags2.readyState)
+            
+            log_msg(spot_data[0])
+            
+            apply_spot_to_big(spot_data[0])                   
+
+
+            //
+            // add process items
+            spot_process = document.getElementById("spot_process");
+            if (spot_process.childElementCount > 0) {
+              spot_process.removeChild(spot_process.firstChild);
+            }
+            for (i = 1; i < 5; i++) {              
+              img_url = spot_data[0][i]
+              console.log(img_url)
+              element = document.createElement("img")
+              element.src = img_url
+              element.style.width="100%"
+              element.style.height="100%" 
+                
+              spot_process.appendChild(element)
+            }
+
+            // console.log(img)
+            //$('#spot_tittle').html(spot_data);
+          }
+        }
+        xhrtags2.open("GET", server+"/state/");
+        xhrtags2.send();
+      }
+
+      //
+      //
+      //
+      function load_color_state() {
+        var xhrtags2 = new XMLHttpRequest();
+        xhrtags2.onreadystatechange = function() {             
+          if(this.response.length>0 && xhrtags2.readyState==4){ 
+            var spot_colors = JSON.parse(this.response);
+            console.log("load_color_state", spot_colors, xhrtags2.readyState)
+           
+            for (var i = 0; i < spot_colors.length; i++){
+              var element = document.createElement('div');
+              var c = spot_colors[i]              
+              element.style.backgroundColor = c;
+              element.innerHTML = c;
+
+              document.getElementById("spot_colors").appendChild(element);
+          }
+            //apply_spot_to_big(spot_data)                   
+            $('#spot_colors').html(spot_colors);
+          }
+        }
+        xhrtags2.open("GET", server+"/state_colors/");
+        xhrtags2.send()
+      }      
+
+
+
+
+      function delete_tag_html(tag_str) {
+          for (ii in tags_colums) {
+            var resul1t_view = document.querySelector('.tags-result')
+            if (ii == tag_str) {
+              resul1t_view.removeChild(tags_colums[ii])
+              delete tags_colums[ii]
+            }
+          }
+      }
+
+      function arrayContains(needle, arrhaystack) {
+          return (arrhaystack.indexOf(needle) > -1);
+      }
+
+      function recalc_tags() {
+        xhrtags.open("GET", server+"/tags");
+        xhrtags.send();
+        xhrtags.onreadystatechange = function() {
+          if (this.status === 200 && this.readyState === 4) {
+              var data = JSON.parse(this.response);
+              var tags = data;
+              var count = 0
+              for (tag_str in tags_colums) {
+                if (arrayContains(tag_str, tags) == false || count > 9) {
+                    delete_tag_html(tag_str)
+                } else {
+                  count+=1
+                }
+              }
+            }
+          }
+  
+      }
+
+      //
+      // load tags at start app
+      function load_tags() {
+        var xhrtags = new XMLHttpRequest();
+        xhrtags.open("GET", server + "/tags");
+        xhrtags.send();
+        xhrtags.onreadystatechange = function() {
+        if (this.status === 200 && this.readyState === 4) {
+            var data = JSON.parse(this.response);
+            var tags = data;                        
+            for(var i=0; i < tags.length; i++){
+              tag_str =  tags[i]
+              add_tag_html(tag_str)
+            }
+          }
+        }
+      }
+
+      socket.on('tag', function (tag_data) {
+        tag += 1
+        $('#tag').html(tag);
+        
+        tag_action = tag_data[0]
+        tag_str = tag_data[1]
+        //console.log(tag_action, tag_str)
+        if (tag_action == "tag_add") {
+            add_tag_html(tag_str)
+            log_msg("tag_add " + tag_str)
+        }
+        if (tag_action == "tag_update") {
+          log_msg("tag_update " + tag_str)
+          //add_tag_html(tag_str)
+            for (ii in tags_colums) {
+              if (ii == tag_str) {
+                var tag_html = document.getElementById("data_" + tag_str)
+                var item = document.createElement("div")
+                item.style.width="31px"
+                item.style.height="31px"
+                item.style.backGroundColor = 'white'
+                item.className = "update_item"
+                //tag_html.appendChild(item)
+              }
+            }
+        }
+        if (tag_action == "tag_delete") {
+            log_msg("tag_delete " + tag_str)
+            delete_tag_html(tag_str)
+        }
+      });
+
+
+      //
+      //
+      //
+      function getTagElement(tag_str) {
+        //console.log("!!!!!!!!!!!!!!!!!!!!", tags_colums)
+        //var resul1t_view = document.querySelector('.tags-result')
+        for (ii in tags_colums) {          
+          //console.log("getTagElement ckeck", ii,tag_str)
+          if (ii == tag_str) {    
+
+            return tags_colums[ii]
+          }
+        }
+        return null
+      }
+
+
+
+
+      socket.on('img', function (img_data) {
+        console.log("socket.on img", img_data)
+        imgs += 1
+        $('#tag').html(imgs);
+        img_action = img_data[0]
+        img_path = img_data[1]
+        img_tag = img_data[2]
+        new_image(img_tag, img_path)
+      });
+
+      function new_image(tag_str, path, size = null) {
+        //console.log("new_image", tag_str, path)
+        //set_state_spot(path)
+        //set_word_spot(path)
+
+        need_add = true
+        element = document.createElement("img")
+        element.onload=imageFound;
+        element.onerror=imageNotFound;
+        element.src = path
+
+        function imageFound() {
+          //console.log('That image is found and loaded');
+        }
+        
+        function imageNotFound() {
+          //console.log('That image was not found.');
+          need_add = false
+        }
+
+        column = getTagElement(tag_str)
+        //console.log("tag_str", tag_str, column)
+        if (size == null) {
+          
+          if (column == null) {
+            column = document.querySelector('.errors');
+            element.style.width="16px"
+            element.style.height="16px"  
+          } else {
+            element.style.width="32px"
+            element.style.height="32px"
+          }  
+        } else {
+            element.style.width=size
+            element.style.height=size
+        }
+        if (column) {
+          if (need_add) {
+              column.appendChild(element)
+          }
+        }
+      }
+
+      //
+      // 
+      //
+      socket.on('spot', function (spot_data) {
+        console.log("socket.on 'spot' spot_data:", spot_data)
+        type = spot_data[0]['type']
+        console.log("socket.on 'spot' type:", type, "tag/combined")
+
+        if (type == "tag")
+            apply_spot_to_tag(spot_data)
+
+        if (type == "combined")
+            apply_spot_to_big(spot_data[0].blr, container="tags_spot")
+            $('#spot_tittle').html(spot_data[0].blr);
+
+            load_color_state()
+            
+            console.log(spot_data[0].blr)
+            apply_spot_to_tag(spot_data)
+            //apply_spot_to_big(spot_data[0].blr)        
+      });
+
+      function apply_spot_to_tag(spot_data) {
+        console.log("apply_spot_to_tag", spot_data)        
+        data = spot_data[0]
+        tag_str = data.tag 
+        setTimeout(() => {new_image(data.tag, data.src, "32px")}, 100);
+        setTimeout(() => {new_image(data.tag, data.pal, "32px")}, 200);
+        setTimeout(() => {new_image(data.tag, data.col, "32px")}, 300);
+        setTimeout(() => {new_image(data.tag, data.som, "32px")}, 400);
+        // setTimeout(() => {new_image(data.tag, data.blr, "128px")}, 600);
+
+        img = data.blr
+        result = img.substring(img.length - 7);
+        if (result == "blr.png") {
+          path = img
+          console.log(path)
+          document.getElementById("tag_" + tag_str).style.backgroundImage = "url('"+path+"')";
+          document.getElementById("tag_" + tag_str).style.backgroundSize = "128px 128px"
+          document.getElementById("tag_" + tag_str).style.opacity  = ""                    
+        }
+      }
+
+      function apply_spot_to_big(path, container = "tags_spotr") {
+        console.log("apply_spot_to_big", path)
+        element = document.createElement("img")
+        element.src = path
+        element.style.width="100%"
+        element.style.height="100%" 
+        
+        tags_spot_cnt = document.getElementById("tags_spot");
+        if (tags_spot_cnt.childElementCount > 0) {
+          tags_spot_cnt.removeChild(tags_spot_cnt.firstChild);
+        }
+        tags_spot_cnt.appendChild(element)
+        tags_spot_cnt.style.width="300%"
+        tags_spot_cnt.style.height="100%"
+
+        element2 = document.createElement("img")
+        element2.src = path
+        element2.style.width="512px"
+        element2.style.height="512px" 
+        element2.style.overflow = "hidden"
+
+        tags_spot2_cnt = document.getElementById("tags_spot2")
+        if (tags_spot2_cnt.childElementCount > 0) {
+          tags_spot2_cnt.removeChild(tags_spot2_cnt.firstChild);
+        }
+        tags_spot2_cnt.appendChild(element2)
+        tags_spot2_cnt.style.overflow = "hidden"
+
+        //console.log(tags_spot_cnt)
+        //console.log(element)
+      }
+
+
+
+
+
+
+
+
+
+
+
+      
+      socket.on('connect', function() {  
+        //console.log('connect');    
+        //var start_time;
+        window.setInterval(function () {
+            counter += 1
+            start_time = (new Date).getTime();
+            socket.emit('my_ping');
+        }, 250);
+      });
+  
+      socket.on('my_pong', function () {
+        const latency = (new Date).getTime() - start_time;
+        // console.log("latency", latency)
+        $('#latency').html(latency);
+        $('#counter').html(counter);
+      });
+      
+      socket.on('tags', function(tags) {
+        //console.log("tags", tags)
+          $('#tag').html(tags.join(",")); 
+        // update UI with new data
+      });
+
+      socket.on('tags_restart', function() {
+        console.log("tags_restart");
+        location.reload();
+      });
+
+      socket.on('switch_page', function(url) {
+        //alert("switch apege")
+        console.log("switch_page", url);
+        window.location=url;
+        location.reload();
+      });      
+  
+      socket.on('word', function(data) {
+        //alert("switch apege")
+        console.log("word", data[0], data[1]);
+        log_str = "word " + str(data[0]) + " "+ str(data[1]);
+        log_msg(log_str);
+      });
+  
+      socket.on('data', function(data) {
+        console.log("data", data)
+        // update UI with new data
+      });    
+  
+      socket.on('disconnect', function() {
+        console.log('Disconnected from server');
+      });
+
+      if (inited == false) {
+        load_spot_state()
+        load_color_state()
+        inited = true
+      }
+      
+      setTimeout(function() {load_tags()}, 1000);
+
+      function log_msg(msg) {
+        var log_view = document.getElementById('log'); 
+        log_view.innerHTML = msg + "<br />" + log_view.innerHTML;
+      }
+
+      function log_img(msg) {
+        var log_view = document.getElementById('log_img'); 
+        log_view.innerHTML += msg + "<br />";
+      }
+
+
+  </script>
+
+  <div id="debug">
+    <a href="/help">counter:<span id="counter"></span> | latency:<span id="latency"></span> | tag:<span id="tag"></span></a>
+  </div>
+
+  <div id="log"></div>
+
+  <div id="log_img"></div>
+
+
+  <div class="tags">
+   
+    <ul id="tags2" class="tags-result"></ul>
+    
+  </div>
+  
+  <span id="spot_tittle"></span>
+
+  <div id="tags_spot2" class="img2" style="z-index:-1"></div>
+
+  <div id="tags_spot" class="img" style="z-index:-3;"></div>
+
+  <span id="spot_process" style="z-index:100"></span>
+
+  <span id="spot_colors" style="z-index:100"></span>
+
+  <div class="words" style="position:absolute;z-index:0;">
+    
+    <ul id="words2" class="word-result"></ul>
+    
+    <div id="words_spot"></div>
+  
+  </div>
+
+
+  
+
+  <div class="errors"></div>
+  
+  <div class="spots"><div id ="animate"><ul id="spotsl" class="ajax-result"></ul></div></div>
+
+</body>
+</html>

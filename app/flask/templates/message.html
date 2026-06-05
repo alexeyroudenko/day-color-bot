@@ -1,0 +1,311 @@
+<!doctype html>
+<html>
+<head>
+  <script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+  <title>DayColor</title>
+  
+</head>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='spots.css') }}" />
+<style>
+  #log_img {
+    position: absolute;
+    top:0xp;
+    right:512px;
+    z-index:100;
+  }
+  .update_item {
+    border:1px solid #ffffff;
+    float:left;
+  }
+
+  #spot_colors, #spot_process {
+    border:1px solid #ffffff;
+    position: absolute;
+    top:128px;
+    right:128px;
+    font-size:10px;
+    visibility:hidden;
+  }
+
+  #spot_process {
+    right:256px;
+    visibility:hidden;
+  }
+
+  
+  .spots {
+   border:0px solid #fff;
+    width:512px;
+    height:100%;
+    overflow:hidden;
+    position:absolute;
+    right:30%;
+    top:0px;
+    font-size: 14px;
+taext-shadow: 2px 2px #333333; 
+    visibility:visible;
+  }
+
+  .white {
+    padding:50px;
+    margin:50px;
+  }
+
+
+</style>
+<body>
+  
+  <script type="text/javascript" charset="utf-8">
+
+    var server = window.location.protocol + "//" + window.location.host;
+    console.log(server)
+    
+    var socket = io();
+
+    var counter = 0
+    var tag = 0
+    var imgs = 0
+    var start_time = (new Date).getTime()
+    var inited = false
+
+
+
+
+      //
+      //
+      //
+      function load_spot_state() {
+        var xhrtags2 = new XMLHttpRequest();
+        xhrtags2.onreadystatechange = function() {             
+          if(this.response.length>0 && xhrtags2.readyState==4){ 
+            var spot_data = JSON.parse(this.response);
+            console.log("load_spot_state", spot_data, xhrtags2.readyState)
+            
+            log_msg(spot_data)
+            console.log(spot_data[0][0])
+            
+            apply_spot_to_big(spot_data[0][0])  
+
+            spot_process = document.getElementById("spot_process");
+            if (spot_process.childElementCount > 0) {
+              spot_process.removeChild(spot_process.firstChild);
+            }
+            for (i = 1; i < 5; i++) {              
+              img_url = "/" + spot_data[0][i]
+              console.log(img_url)
+              element = document.createElement("img")
+              element.src = img_url
+              element.style.width="100%"
+              element.style.height="100%" 
+                
+              spot_process.appendChild(element)
+            }
+
+            // console.log(img)
+            $('#spot_tittle').html(spot_data);
+          }
+        }
+        xhrtags2.open("GET", server+"/state/");
+        xhrtags2.send();
+      }
+
+      //
+      //
+      //
+      function load_color_state() {
+        var xhrtags2 = new XMLHttpRequest();
+        xhrtags2.onreadystatechange = function() {             
+          if(this.response.length>0 && xhrtags2.readyState==4){ 
+            var spot_colors = JSON.parse(this.response);
+            console.log("load_color_state", spot_colors, xhrtags2.readyState)
+           
+            for (var i = 0; i < spot_colors.length; i++){
+              var element = document.createElement('div');
+              var c = spot_colors[i]              
+              element.style.backgroundColor = c;
+              element.innerHTML = c;
+
+              document.getElementById("spot_colors").appendChild(element);
+          }
+            if (spot_data) {
+                apply_spot_to_big(spot_data)                   
+            }
+            $('#spot_colors').html(spot_colors);
+          }
+        }
+        xhrtags2.open("GET", server+"/state_colors/");
+        xhrtags2.send()
+      }      
+
+
+      //
+      // 
+      //
+      socket.on('spot', function (spot_data) {
+        console.log("socket.on 'spot' spot_data:", spot_data)
+        type = spot_data[0]['type']
+        console.log("socket.on 'spot' type:", type, "tag/combined")
+
+        if (type == "tag")
+            apply_spot_to_tag(spot_data)
+
+        if (type == "combined")
+            apply_spot_to_big(spot_data[0].blr, container="tags_spot")
+            $('#spot_tittle').html(spot_data[0].blr);
+
+            load_color_state()
+            
+            console.log(spot_data[0].blr)
+            apply_spot_to_tag(spot_data)
+            //apply_spot_to_big(spot_data[0].blr)        
+      });
+
+      function apply_spot_to_tag(spot_data) {
+        console.log("apply_spot_to_tag", spot_data)        
+        data = spot_data[0]
+        tag_str = data.tag 
+        setTimeout(() => {new_image(data.tag, data.src, "32px")}, 100);
+        setTimeout(() => {new_image(data.tag, data.pal, "32px")}, 200);
+        setTimeout(() => {new_image(data.tag, data.col, "32px")}, 300);
+        setTimeout(() => {new_image(data.tag, data.som, "32px")}, 400);
+        // setTimeout(() => {new_image(data.tag, data.blr, "128px")}, 600);
+
+        img = data.blr
+        result = img.substring(img.length - 7);
+        if (result == "blr.png") {
+          path = img
+          document.getElementById("tag_" + tag_str).style.backgroundImage = "url('"+path+"')";
+          document.getElementById("tag_" + tag_str).style.backgroundSize = "128px 128px"
+          document.getElementById("tag_" + tag_str).style.opacity  = ""                    
+        }
+      }
+
+      function apply_spot_to_big(path, container = "tags_spotr") {
+        console.log("apply_spot_to_big", path)
+        element = document.createElement("img")
+        element.src = "/" + path
+        element.style.width="100%"
+        element.style.height="100%" 
+        
+        tags_spot_cnt = document.getElementById("tags_spot");
+        if (tags_spot_cnt.childElementCount > 0) {
+          tags_spot_cnt.removeChild(tags_spot_cnt.firstChild);
+        }
+        tags_spot_cnt.appendChild(element)
+        tags_spot_cnt.style.width="300%"
+        tags_spot_cnt.style.height="100%"
+
+        element2 = document.createElement("img")
+        element2.src = "/" + path
+        element2.style.width="512px"
+        element2.style.height="512px" 
+        element2.style.overflow = "hidden"
+
+        tags_spot2_cnt = document.getElementById("tags_spot2")
+        if (tags_spot2_cnt.childElementCount > 0) {
+          tags_spot2_cnt.removeChild(tags_spot2_cnt.firstChild);
+        }
+        tags_spot2_cnt.appendChild(element2)
+        tags_spot2_cnt.style.overflow = "hidden"
+
+        //console.log(tags_spot_cnt)
+        //console.log(element)
+      }
+
+
+
+
+
+
+
+
+
+
+
+      
+      socket.on('connect', function() {  
+        //console.log('connect');    
+        //var start_time;
+        window.setInterval(function () {
+            counter += 1
+            start_time = (new Date).getTime();
+            socket.emit('my_ping');
+        }, 250);
+      });
+  
+      socket.on('my_pong', function () {
+        const latency = (new Date).getTime() - start_time;
+        // console.log("latency", latency)
+        $('#latency').html(latency);
+        $('#counter').html(counter);
+      });
+      
+      socket.on('tags', function(tags) {
+        //console.log("tags", tags)
+          $('#tag').html(tags.join(",")); 
+        // update UI with new data
+      });
+
+      socket.on('tags_restart', function() {
+        console.log("tags_restart");
+        location.reload();
+      });
+  
+      socket.on('word', function(data) {
+        console.log("word", data[0], data[1]);
+        log_str = "word " + str(data[0]) + " "+ str(data[1]);
+        log_msg(log_str);
+      });
+  
+      socket.on('data', function(data) {
+        console.log("data", data)
+        // update UI with new data
+      });    
+  
+      socket.on('disconnect', function() {
+        console.log('Disconnected from server');
+      });
+
+      if (inited == false) {
+        load_spot_state()
+        load_color_state()
+        inited = true
+      }
+      
+      function log_msg(msg) {
+        var log_view = document.getElementById('log'); 
+        log_view.innerHTML = msg + "<br />" + log_view.innerHTML;
+      }
+
+      function log_img(msg) {
+        var log_view = document.getElementById('log_img'); 
+        log_view.innerHTML += msg + "<br />";
+      }
+
+
+  </script>
+ 
+
+  <div id="log"></div>
+
+  <div id="log_img"></div>
+
+  <div id="tags_spot2" class="img2" style="z-index:-1"></div>
+  
+  <div id="tags_spot" class="img" style="z-index:-3;"></div>
+
+  <span id="spot_process" style="z-index:100"></span>
+
+  <span id="spot_colors" style="z-index:100"></span>
+
+  <div class="words" style="position:absolute;z-index:0;">
+    
+  <div class="spots"><div id ="animate"><ul id="spotsl" class="ajax-result"></ul></div></div>
+
+</body>
+</html>
